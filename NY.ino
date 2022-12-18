@@ -1,19 +1,61 @@
+Артём Черных, [18.12.2022 19:26]
 #include <SoftwareSerial.h>
 #include <TimerOne.h>
 #include "VoiceRecognitionV3.h"
-
 VR myVR(2, 3);    // 2:RX 3:TX, you can choose your favourite pins.
+
+/*
+* Перечень допустимых режимов.
+* ON - включаем все лампочки.
+* OFF - выключаем все лампочки.
+* BLINKING - режим мигания.
+* CHANGED_COLOUR - режим включения определённого цвета.
+*/
+enum Modes {
+  ON,
+  OFF,
+  BLINKING,
+  RED,
+  BLUE,
+  GREEN,
+};
+
 uint8_t records[7];
 uint8_t buf[64];
-int led = 13;
-int ledG = 9;
 
-#define onRecord    (0)
-#define offRecord   (1)
-#define blinkRecord (2)
-#define RedRecord (3)
+/*
+* Номер пина для соответствующего цвета.
+* Красный - 13;
+* Синий - 8;
+* Зелёный - 7;
+*/
+int pinRed = 13;
+int pinBlue = 8;
+int pinGreen = 7;
 
-/**
+/*
+* Текущий режим подстветки.
+*/
+Modes mode = OFF;
+
+/*
+* Перечень команд, записанных в плате.
+*/
+#define changeMode (0)
+#define turnRed (1)
+#define turnGreen (2)
+#define turnBlue (3)
+
+//init functions
+void turnOff();
+void turnOn();
+void turnBlinkingOn();
+void turnRedColourOn();
+void turnBlueColourOn();
+void turnGreenColourOn();
+//
+
+/
   @brief   Print signature, if the character is invisible, 
            print hexible value instead.
   @param   buf     --> command length
@@ -33,7 +75,7 @@ void printSignature(uint8_t *buf, int len)
     }
 }
 
-/**
+/
   @brief   Print signature, if the character is invisible, 
            print hexible value instead.
   @param   buf  -->  VR module return value when voice is recognized.
@@ -70,11 +112,13 @@ void printVR(uint8_t *buf)
 
 void setup()
 {
-    myVR.begin(9600);
+    int speed = 9600;
+    myVR.begin(speed);
     Serial.begin(115200);
     Serial.println("Elechouse Voice Recognition V3 Module\r\nControl LED sample");
-    pinMode(led, OUTPUT);
-    pinMode(ledG, OUTPUT);
+    pinMode(pinRed, OUTPUT);
+    pinMode(pinBlue, OUTPUT);
+    pinMode(pinGreen, OUTPUT);
     if (myVR.clear() == 0) {
         Serial.println("Recognizer cleared.");
     } else {
@@ -82,60 +126,51 @@ void setup()
         Serial.println("Please check connection and restart Arduino.");
         while(1);
     }
-    if (myVR.load((uint8_t)onRecord) >= 0) {
-        Serial.println("onRecord loaded");
+    if (myVR.load((uint8_t)changeMode) >= 0) {
+        Serial.println("shazam was loaded");
     }
-    if (myVR.load((uint8_t)offRecord) >= 0) {
-        Serial.println("offRecord loaded");
+    if (myVR.load((uint8_t)turnRed) >= 0) {
+        Serial.println("red mode was loaded");
     }
-    if (myVR.load((uint8_t)blinkRecord) >= 0) {
-        Serial.println("blinkRecord loaded");
+    if (myVR.load((uint8_t)turnGreen) >= 0) {
+        Serial.println("green mode was loaded");
     }
-    if (myVR.load((uint8_t)RedRecord) >= 0) {
-        Serial.println("RedRecord loaded");
+    if (myVR.load((uint8_t)turnBlue) >= 0) {
+        Serial.println("blue mode was loaded");
     }
     Timer1.initialize(100000);
 }
 
-void timerIsr1()
+void timerIsr()
 {
-    digitalWrite(13, digitalRead(13) ^ 1);
+    digitalWrite(pinRed, digitalRead(pinRed) ^ 1);
+    digitalWrite(pinBlue, digitalRead(pinBlue) ^ 1);
+    digitalWrite(pinGreen, digitalRead(pinGreen) ^ 1);
 }
 
-void timerIsr2()
-{
-    digitalWrite(8, digitalRead(8) ^ 1);
-}
+Артём Черных, [18.12.2022 19:26]
 void loop()
 {
-    int ret;
-    ret = myVR.recognize(buf, 100);    
+    int timeout = 100;
+    int ret = myVR.recognize(buf, timeout);
+    
     if (ret > 0) { 
-        switch(buf[1]){
-			case 0:
-                digitalWrite(13, LOW);
-                digitalWrite(8, LOW);
-                digitalWrite(7, LOW);
-                Timer1.detachInterrupt();
-                break;
-            case 1:
-                digitalWrite(13, HIGH);
-                digitalWrite(8, HIGH);
-                digitalWrite(7, HIGH);
-                Timer1.detachInterrupt();
-                break;
-            case 2:
-                digitalWrite(13, HIGH);
-                Timer1.detachInterrupt();
-                break;
-            case 3:
-                digitalWrite(7, HIGH);
-                Timer1.detachInterrupt();
-                break;
-            case 4:
-                digitalWrite(8, HIGH);
-                Timer1.detachInterrupt();
-                break;
+        switch(buf[1])
+        {
+            case changeMode:
+              switch (mode) 
+              {
+                case ON: turnBlinkingOn(); break;
+                case OFF: turnOn(); break;
+                case BLINKING: turnOff(); break;
+                case RED: 
+                case GREEN:
+                case BLUE: turnOff(); break;
+              }
+              break;
+            case turnRed: turnRedColourOn(); break;
+            case turnBlue: turnBlueColourOn(); break;
+            case turnGreen: turnGreenColourOn(); break;
             default:
                 Timer1.detachInterrupt();
                 Serial.println("Record function undefined");
@@ -143,4 +178,73 @@ void loop()
         }
         printVR(buf);
     }
+}
+
+/*
+* Выполняет выключение подсветки.
+*/
+void turnOff() 
+{
+  mode = OFF;
+  digitalWrite(pinRed, LOW);
+  digitalWrite(pinBlue, LOW);
+  digitalWrite(pinGreen, LOW);
+  Timer1.detachInterrupt();
+}
+
+/*
+* Выполняет включение подсветки.
+*/
+void turnOn()
+{
+  mode = ON;
+  digitalWrite(pinRed, HIGH);
+  digitalWrite(pinBlue, HIGH);
+  digitalWrite(pinGreen, HIGH);
+  Timer1.detachInterrupt();
+}
+
+/*
+* Выполняет включение режима мигания.
+*/
+void turnBlinkingOn()
+{
+  mode = BLINKING;                  
+  Timer1.attachInterrupt(timerIsr);
+}
+
+/*
+* Выполняет включение красного цвета цвета.
+*/
+void turnRedColourOn()
+{
+  mode = RED;
+  digitalWrite(pinRed, HIGH);
+  digitalWrite(pinGreen, LOW);
+  digitalWrite(pinBlue, LOW);
+  Timer1.detachInterrupt();
+}
+
+/*
+* Выполняет включение синего цвета.
+*/
+void turnBlueColourOn()
+{
+  mode = BLUE;
+  digitalWrite(pinBlue, HIGH);
+  digitalWrite(pinRed, LOW);
+  digitalWrite(pinGreen, LOW);
+  Timer1.detachInterrupt();
+}
+
+/*
+* Выполняет включение зёленого цвета.
+*/
+void turnGreenColourOn()
+{
+  mode = GREEN;
+  digitalWrite(pinGreen, HIGH);
+  digitalWrite(pinRed, LOW);
+  digitalWrite(pinBlue, LOW);
+  Timer1.detachInterrupt();
 }
