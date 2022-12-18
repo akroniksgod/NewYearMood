@@ -1,4 +1,3 @@
-Артём Черных, [18.12.2022 19:26]
 #include <SoftwareSerial.h>
 #include <TimerOne.h>
 #include "VoiceRecognitionV3.h"
@@ -148,7 +147,6 @@ void timerIsr()
     digitalWrite(pinGreen, digitalRead(pinGreen) ^ 1);
 }
 
-Артём Черных, [18.12.2022 19:26]
 void loop()
 {
     int timeout = 100;
@@ -185,10 +183,11 @@ void loop()
 */
 void turnOff() 
 {
+  //вместо HIGH должно быть LOW
   mode = OFF;
-  digitalWrite(pinRed, LOW);
-  digitalWrite(pinBlue, LOW);
-  digitalWrite(pinGreen, LOW);
+  digitalWrite(pinRed, HIGH);
+  digitalWrite(pinBlue, HIGH);
+  digitalWrite(pinGreen, HIGH);
   Timer1.detachInterrupt();
 }
 
@@ -197,10 +196,11 @@ void turnOff()
 */
 void turnOn()
 {
+  //вместо LOW должно быть HIGH
   mode = ON;
-  digitalWrite(pinRed, HIGH);
-  digitalWrite(pinBlue, HIGH);
-  digitalWrite(pinGreen, HIGH);
+  digitalWrite(pinRed, LOW);
+  digitalWrite(pinBlue, LOW);
+  digitalWrite(pinGreen, LOW);
   Timer1.detachInterrupt();
 }
 
@@ -218,10 +218,11 @@ void turnBlinkingOn()
 */
 void turnRedColourOn()
 {
+  //вместо LOW должно быть HIGH и наоборот
   mode = RED;
-  digitalWrite(pinRed, HIGH);
-  digitalWrite(pinGreen, LOW);
-  digitalWrite(pinBlue, LOW);
+  digitalWrite(pinRed, LOW);
+  digitalWrite(pinGreen, HIGH);
+  digitalWrite(pinBlue, HIGH);
   Timer1.detachInterrupt();
 }
 
@@ -230,10 +231,11 @@ void turnRedColourOn()
 */
 void turnBlueColourOn()
 {
+  //вместо LOW должно быть HIGH и наоборот
   mode = BLUE;
-  digitalWrite(pinBlue, HIGH);
-  digitalWrite(pinRed, LOW);
-  digitalWrite(pinGreen, LOW);
+  digitalWrite(pinBlue, LOW);
+  digitalWrite(pinRed, HIGH);
+  digitalWrite(pinGreen, HIGH);
   Timer1.detachInterrupt();
 }
 
@@ -242,9 +244,10 @@ void turnBlueColourOn()
 */
 void turnGreenColourOn()
 {
+  //вместо LOW должно быть HIGH и наоборот
   mode = GREEN;
-  digitalWrite(pinGreen, HIGH);
-  digitalWrite(pinRed, LOW);
-  digitalWrite(pinBlue, LOW);
+  digitalWrite(pinGreen, LOW);
+  digitalWrite(pinRed, HIGH);
+  digitalWrite(pinBlue, HIGH);
   Timer1.detachInterrupt();
 }
