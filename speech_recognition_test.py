@@ -1,10 +1,33 @@
 import speech_recognition as sr
 import os
 import sys
-import webbrowser
+import wiringpi
 from enum import Enum
 
+# One of the following MUST be called before using IO functions:
+wiringpi.wiringPiSetup()      # For sequential pin numbering
+# OR
+wiringpi.wiringPiSetupSys()   # For /sys/class/gpio with GPIO pin numbering
+# OR
+wiringpi.wiringPiSetupGpio()  # For GPIO pin numbering
 
+red_pin = 0
+green_pin = 2
+blue_pin = 1
+
+#Привязка пина
+wiringpi.pinMode(0, 1)
+wiringpi.pinMode(1, 1)
+wiringpi.pinMode(2, 1)
+
+
+# Перечень допустимых режимов.
+#   ON - включаем все лампочки.
+#   OFF - выключаем все лампочки.
+#   BLINKING - режим мигания.
+#   RED - красная подсветка
+#   GREEN - зелёная подсветка
+#   BLUE - синяя подсветка
 class Modes(Enum):
     ON = "включись"
     OFF = "выключись"
@@ -15,7 +38,7 @@ class Modes(Enum):
     EXIT = "стоп"
 
 
-mode = Modes.OFF
+CURRENT_MODE = Modes.OFF
 
 
 def talk(words):
@@ -61,53 +84,49 @@ def command():
         Теперь мы получили данные в формате строки,
         которые спокойно можем проверить в условиях
         """
-        zadanie = r.recognize_google(audio, language="ru-RU").lower()
-        # Просто отображаем текст что сказал пользователь
-        print("Вы сказали: " + zadanie)
+        user_command = r.recognize_google(audio, language="ru-RU").lower()
+        # Просто отображаем текст, что сказал пользователь
+        print("Вы сказали: " + user_command)
     # Если не смогли распознать текст, то будет вызвана эта ошибка
     except sr.UnknownValueError:
         # Здесь просто проговариваем слова "Я вас не поняла"
         # и вызываем снова функцию command() для
         # получения текста от пользователя
         talk("Я вас не поняла")
-        zadanie = command()
+        user_command = command()
 
     # В конце функции возвращаем текст задания
     # или же повторный вызов функции
-    return zadanie
+    return user_command
 
 
 def turnBlinkingOn():
-    mode = Modes.BLINKING
-    # Timer1.attachInterrupt(timerIsr);
+    CURRENT_MODE = Modes.BLINKING
 
 
 def turnBlinkingOff():
-    mode = Modes.ON
-    # Timer1.attachInterrupt(timerIsr);
+    CURRENT_MODE = Modes.ON
 
 
 def turnOn():
-    mode = Modes.ON
-    # digitalWrite(pinRed, LOW)
-    # digitalWrite(pinBlue, LOW)
-    # digitalWrite(pinGreen, LOW)
-    # Timer1.detachInterrupt()
+    CURRENT_MODE = Modes.ON
+    wiringpi.digitalWrite(red_pin, 0)
+    wiringpi.digitalWrite(blue_pin, 0)
+    wiringpi.digitalWrite(green_pin, 0)
 
 
 def turnOff():
-    mode = Modes.OFF
-    # digitalWrite(pinRed, LOW)
-    # digitalWrite(pinBlue, LOW)
-    # digitalWrite(pinGreen, LOW)
-    # Timer1.detachInterrupt()
+    CURRENT_MODE = Modes.OFF
+    wiringpi.digitalWrite(red_pin, 1)
+    wiringpi.digitalWrite(blue_pin, 1)
+    wiringpi.digitalWrite(green_pin, 1)
 
 
 # Данная функция служит для проверки текста,
-# что сказал пользователь (zadanie - текст от пользователя)
+# что сказал пользователь (user_command - текст от пользователя)
 
-def makeSomething(zadanie):
-    match zadanie:
+def makeSomething(user_command):
+    match user_command:
         case Modes.ON.value:
             turnBlinkingOn()
         case Modes.OFF.value:
