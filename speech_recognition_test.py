@@ -1,5 +1,4 @@
 import speech_recognition as sr
-import os
 import sys
 from enum import Enum
 
@@ -22,14 +21,6 @@ class Modes(Enum):
 
 
 CURRENT_MODE = Modes.OFF
-
-
-def talk(words):
-    print(words)
-    os.system("Говорите " + words)
-
-
-talk("Привет, чем я могу помочь вам?")
 
 """ 
     Функция command() служит для отслеживания микрофона.
@@ -75,7 +66,7 @@ def command():
         # Здесь просто проговариваем слова "Я вас не поняла"
         # и вызываем снова функцию command() для
         # получения текста от пользователя
-        talk("Я вас не поняла")
+        # talk("Я вас не поняла")
         user_command = command()
 
     # В конце функции возвращаем текст задания
@@ -100,20 +91,26 @@ def turn_off():
 
 def main_loop(user_command):
     if user_command == Modes.ON.value:
+        print("Включается режим мигания")
         turn_blinking_on()
-        return
 
-    if user_command == Modes.OFF.value:
+    elif user_command == Modes.OFF.value:
+        print("Включается подсветка")
         turn_on()
-        return
 
-    if user_command == Modes.BLINKING.value | user_command == Modes.BLUE.value | user_command == Modes.GREEN.value | user_command == Modes.RED.value:
+    elif user_command == Modes.BLINKING.value:
+        print("Выключается подсветка")
         turn_off()
-        return
 
-    if user_command == Modes.EXIT.value:
+    elif user_command == Modes.BLUE.value or user_command == Modes.GREEN.value or user_command == Modes.RED.value:
+        print("Включается цвет " + user_command)
+
+    elif user_command == Modes.EXIT.value:
+        print("Завершение работы")
         sys.exit()
 
+    else:
+        print("Ничего не выполняем")
 
 # Вызов функции для проверки текста будет
 # осуществляться постоянно, поэтому здесь
