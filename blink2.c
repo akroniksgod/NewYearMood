@@ -4,6 +4,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void TerminateAll()
+{
+	digitalWrite (0, HIGH);
+	digitalWrite (1, HIGH);
+	digitalWrite (2, HIGH);
+}
+
 void SetRandomColor()
 {
 	int mudel = rand() % 300;
@@ -22,6 +29,24 @@ void SetRandomColor()
 	delay(mudel);
 }
 
+void OnlyRed()
+{
+	TerminateAll();
+	digitalWrite(0, LOW);
+}
+
+void OnlyBlue()
+{
+	TerminateAll();
+	digitalWrite(1, LOW);
+}
+
+void OnlyGreen()
+{
+	TerminateAll();
+	digitalWrite(2, LOW);
+}
+
 int main (void)
 {
 	wiringPiSetup();
@@ -29,9 +54,14 @@ int main (void)
 	pinMode (1, OUTPUT);
 	pinMode (2, OUTPUT);
 	
-	digitalWrite (0, HIGH);
-	digitalWrite (1, HIGH);
-	digitalWrite (2, HIGH);
+	TerminateAll();
+	
+	OnlyRed();
+	delay(1000);
+	OnlyBlue();
+	delay(1000);
+	OnlyGreen();
+	delay(1000);
 	
 	for ( ; ; )
 	{
