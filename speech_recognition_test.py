@@ -1,24 +1,7 @@
 import speech_recognition as sr
 import os
 import sys
-import wiringpi
 from enum import Enum
-
-# One of the following MUST be called before using IO functions:
-wiringpi.wiringPiSetup()      # For sequential pin numbering
-# OR
-wiringpi.wiringPiSetupSys()   # For /sys/class/gpio with GPIO pin numbering
-# OR
-wiringpi.wiringPiSetupGpio()  # For GPIO pin numbering
-
-red_pin = 0
-green_pin = 2
-blue_pin = 1
-
-#Привязка пина
-wiringpi.pinMode(0, 1)
-wiringpi.pinMode(1, 1)
-wiringpi.pinMode(2, 1)
 
 
 # Перечень допустимых режимов.
@@ -43,7 +26,7 @@ CURRENT_MODE = Modes.OFF
 
 def talk(words):
     print(words)
-    os.system("say " + words)
+    os.system("Говорите " + words)
 
 
 talk("Привет, чем я могу помочь вам?")
@@ -100,45 +83,40 @@ def command():
     return user_command
 
 
-def turnBlinkingOn():
+def turn_blinking_on():
     CURRENT_MODE = Modes.BLINKING
 
 
-def turnBlinkingOff():
+def turn_on():
     CURRENT_MODE = Modes.ON
 
 
-def turnOn():
-    CURRENT_MODE = Modes.ON
-    wiringpi.digitalWrite(red_pin, 0)
-    wiringpi.digitalWrite(blue_pin, 0)
-    wiringpi.digitalWrite(green_pin, 0)
-
-
-def turnOff():
+def turn_off():
     CURRENT_MODE = Modes.OFF
-    wiringpi.digitalWrite(red_pin, 1)
-    wiringpi.digitalWrite(blue_pin, 1)
-    wiringpi.digitalWrite(green_pin, 1)
 
 
 # Данная функция служит для проверки текста,
 # что сказал пользователь (user_command - текст от пользователя)
 
-def makeSomething(user_command):
-    match user_command:
-        case Modes.ON.value:
-            turnBlinkingOn()
-        case Modes.OFF.value:
-            turnOn()
-        case Modes.BLINKING.value | Modes.BLUE.value | Modes.GREEN.value | Modes.RED.value:
-            turnOff()
-        case Modes.EXIT.value:
-            sys.exit()
+def main_loop(user_command):
+    if user_command == Modes.ON.value:
+        turn_blinking_on()
+        return
+
+    if user_command == Modes.OFF.value:
+        turn_on()
+        return
+
+    if user_command == Modes.BLINKING.value | user_command == Modes.BLUE.value | user_command == Modes.GREEN.value | user_command == Modes.RED.value:
+        turn_off()
+        return
+
+    if user_command == Modes.EXIT.value:
+        sys.exit()
 
 
 # Вызов функции для проверки текста будет
 # осуществляться постоянно, поэтому здесь
 # прописан бесконечный цикл while
 while True:
-    makeSomething(command())
+    main_loop(command())
